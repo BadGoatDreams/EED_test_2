@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Where We Work - Essential Eats Distributors</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+    <style>
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="nav-container">
+            <a href="index.html" class="logo"><img src="Photos/eedlogo.jpg" alt="Essential Eats Distributors Logo">Essential <span>Eats</span></a>
+            <button class="menu-toggle" onclick="document.querySelector('.nav-links').classList.toggle('active')">&#9776;</button>
+            <ul class="nav-links">
+                <li><a href="index.html">Home</a></li>
+                <li><a href="timeline.html">Events</a></li>
+                <li><a href="services.html">Services</a></li>
+                <li><a href="contact.html">Contact</a></li>
+                <li><a href="map.html" class="active">Where We Work</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <header class="hero" style="padding: 3rem 2rem;">
+        <h1>Where We Work</h1>
+        <p>Essential Eats Distributors operates across Montana's reservations and surrounding communities.</p>
+    </header>
+
+    <section class="section" style="padding-top: 0;">
+        <div class="map-container" id="map"></div>
+
+        <div class="map-legend">
+            <h3>Map Legend</h3>
+            <div class="legend-item">
+                <div class="legend-color" style="background: rgba(45, 106, 79, 0.6); border-color: #1b4332;"></div>
+                <span>Reservation Boundaries</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #bc6c25;"></div>
+                <span>Primary Distribution Site</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color" style="background: #52b788;"></div>
+                <span>Community Center / Program Location</span>
+            </div>
+        </div>
+    </section>
+
+    <footer class="footer">
+        <p>&copy; 2026 Essential Eats Distributors. All rights reserved.</p>
+    </footer>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="js/MontanaReservations_1.js"></script>
+    <script>
+        // Montana bounding box to restrict map to state boundaries
+        var montanaBounds = L.latLngBounds(
+            [44.35, -116.05],  // Southwest corner
+            [49.0, -104.0]     // Northeast corner
+        );
+
+        var map = L.map('map', {
+            zoomControl: false,
+            maxBounds: montanaBounds,
+            maxBoundsViscosity: 1.0,
+            minZoom: 6
+        }).fitBounds(montanaBounds);
+
+        L.control.zoom({ position: 'topleft' }).addTo(map);
+
+        // Add CartoDB Voyager tiles (cleaner and prettier than default OSM)
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>',
+            subdomains: 'abcd',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Reservation layer style
+        function reservationStyle(feature) {
+            return {
+                fillColor: '#2d6a4f',
+                weight: 2,
+                opacity: 1,
+                color: '#1b4332',
+                dashArray: '',
+                fillOpacity: 0.5
+            };
+        }
+
+        // Highlight style
+        function highlightStyle(feature) {
+            return {
+                fillColor: '#52b788',
+                weight: 3,
+                opacity: 1,
+                color: '#1b4332',
+                dashArray: '',
+                fillOpacity: 0.7
+            };
+        }
+
+        // Build clean popup content
+        function popupContent(feature) {
+            var p = feature.properties;
+            var parts = [];
+
+            parts.push('<div class="popup-title">' + (p.NAME || 'Reservation') + '</div>');
+
+            if (p.NAMELSAD && p.NAMELSAD !== p.NAME) {
+                parts.push('<div class="popup-field"><span class="popup-label">Name:</span> ' + escapeHtml(p.NAMELSAD) + '</div>');
+            }
+
+            if (p.TRIBE_NAME) {
+                parts.push('<div class="popup-field"><span class="popup-label">Tribe:</span> ' + escapeHtml(p.TRIBE_NAME.replace(/\r?\n/g, '')) + '</div>');
+            }
+
+            if (p.NOTES) {
+                parts.push('<div class="popup-field"><span class="popup-label">Notes:</span> ' + escapeHtml(p.NOTES.replace(/\r?\n/g, ' ')) + '</div>');
+            }
+
+            if (p.Acres) {
+                parts.push('<div class="popup-field"><span class="popup-label">Acres:</span> ' + Number(p.Acres).toLocaleString() + '</div>');
+            }
+
+            if (p.AreaSqMi) {
+                parts.push('<div class="popup-field"><span class="popup-label">Area:</span> ' + Number(p.AreaSqMi).toLocaleString() + ' sq mi</div>');
+            }
+
+            return parts.join('');
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            var div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        var reservationsLayer = L.geoJson(json_MontanaReservations_1, {
+            style: reservationStyle,
+            onEachFeature: function (feature, layer) {
+                layer.bindPopup(popupContent(feature), { maxWidth: 320 });
+
+                layer.on('mouseover', function () {
+                    layer.setStyle(highlightStyle(feature));
+                });
+                layer.on('mouseout', function () {
+                    reservationsLayer.resetStyle(layer);
+                });
+            }
+        }).addTo(map);
+
+        // Primary distribution site marker
+        var primaryIcon = L.divIcon({
+            className: 'custom-marker',
+            html: '<div style="width:16px;height:16px;background:#bc6c25;border:2px solid #fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>',
+            iconSize: [16, 16],
+            iconAnchor: [8, 8]
+        });
+
+        L.marker([48.5569, -113.0133], { icon: primaryIcon })
+            .addTo(map)
+            .bindPopup('<div class="popup-title">Primary Distribution Site</div><div class="popup-field">125 Community Way<br>Browning, MT 59417</div>');
+
+        // Community center markers (green)
+        var centerIcon = L.divIcon({
+            className: 'custom-marker',
+            html: '<div style="width:14px;height:14px;background:#52b788;border:2px solid #fff;border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,0.4);"></div>',
+            iconSize: [14, 14],
+            iconAnchor: [7, 7]
+        });
+
+        var centers = [
+            { coords: [48.5667, -107.8667], name: 'Rocky Boy Community Center', addr: 'Box Elder, MT 59521' },
+            { coords: [48.4833, -109.7667], name: 'Fort Belknap Community Center', addr: 'Harlem, MT 59526' },
+            { coords: [47.5333, -106.9167], name: 'Fort Peck Community Hub', addr: 'Poplar, MT 59255' },
+            { coords: [47.8167, -110.6667], name: 'Rocky Boy Satellite Office', addr: 'Rocky Boy, MT 59521' },
+            { coords: [47.5333, -114.0333], name: 'Flathead Reservation Services', addr: 'Pablo, MT 59855' },
+            { coords: [45.6000, -106.9667], name: 'Crow Reservation Outreach', addr: 'Crow Agency, MT 59022' },
+            { coords: [45.5333, -107.9167], name: 'Northern Cheyenne Center', addr: 'Lame Deer, MT 59043' }
+        ];
+
+        centers.forEach(function(c) {
+            L.marker(c.coords, { icon: centerIcon })
+                .addTo(map)
+                .bindPopup('<div class="popup-title">' + c.name + '</div><div class="popup-field">' + c.addr + '</div>');
+        });
+    </script>
+</body>
+</html>
