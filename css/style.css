@@ -93,20 +93,20 @@ body {
 .hero {
     background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
     color: var(--text-light);
-    padding: 5rem 2rem;
+    padding: 2.5rem 2rem 1rem;
     text-align: center;
 }
 
 .hero h1 {
-    font-size: 3rem;
-    margin-bottom: 1rem;
+    font-size: 2.5rem;
+    margin-bottom: 0.5rem;
     font-weight: 800;
 }
 
 .hero p {
-    font-size: 1.25rem;
+    font-size: 1.1rem;
     max-width: 700px;
-    margin: 0 auto 2rem;
+    margin: 0 auto 1.25rem;
     opacity: 0.95;
 }
 
@@ -441,6 +441,74 @@ body {
     height: 24px;
     border-radius: 4px;
     border: 2px solid rgba(0,0,0,0.2);
+}
+
+/* Carousel - Flowing Horizontal Strip */
+.carousel-section {
+    padding: 0;
+    max-width: 100%;
+    margin: 0;
+}
+
+.carousel-heading {
+    text-align: center;
+    color: var(--text-light);
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    font-weight: 700;
+}
+
+.carousel-flow-wrapper {
+    width: 100%;
+    overflow: hidden;
+    margin-top: 0.75rem;
+    mask-image: linear-gradient(
+        to right,
+        transparent 0%,
+        black 5%,
+        black 95%,
+        transparent 100%
+    );
+    -webkit-mask-image: linear-gradient(
+        to right,
+        transparent 0%,
+        black 5%,
+        black 95%,
+        transparent 100%
+    );
+}
+
+.carousel-flow-track {
+    display: flex;
+    gap: 12px;
+    width: max-content;
+    padding: 0 1rem;
+}
+
+.carousel-flow-track img {
+    height: 280px;
+    width: auto;
+    max-width: 420px;
+    object-fit: cover;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    flex-shrink: 0;
+    transition: transform 0.3s ease;
+}
+
+.carousel-flow-track img:hover {
+    transform: scale(1.03);
+}
+
+@media (max-width: 768px) {
+    .carousel-flow-track img {
+        height: 200px;
+        max-width: 300px;
+    }
+
+    .carousel-heading {
+        font-size: 1.5rem;
+    }
 }
 
 /* Footer */
